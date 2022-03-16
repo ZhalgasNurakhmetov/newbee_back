@@ -7,6 +7,12 @@ entrepreneur_category_association_table = Table('entrepreneur-category', Base.me
                                                 Column('categoryId', ForeignKey('categories.id'), primary_key=True)
                                                 )
 
+client_category_association_table = Table('client-category', Base.metadata,
+                                          Column('clientId', ForeignKey('clients.id'),
+                                                 primary_key=True),
+                                          Column('categoryId', ForeignKey('categories.id'), primary_key=True)
+                                          )
+
 course_category_association_table = Table('course-category', Base.metadata,
                                           Column('courseId', ForeignKey('courses.id'), primary_key=True),
                                           Column('categoryId', ForeignKey('categories.id'), primary_key=True)
@@ -44,6 +50,7 @@ class EntrepreneurModel(Base):
     courses = relationship('CoursesModel', back_populates='entrepreneur')
     filials = relationship('FilialModel', back_populates='entrepreneur')
     feedbacks = relationship('FeedbackModel')
+    role = Column(String, nullable=False, default='ENTREPRENEUR')
 
     def save_to_db(self, db: Session):
         db.add(self)
@@ -126,7 +133,7 @@ class CourseModel(Base):
     # syllabus
     videoPath = Column(String, nullable=True)
     photoPath = Column(String, nullable=True)
-    isActive = Column(Boolean, nullable=False)
+    isActive = Column(Boolean, nullable=False, default=True)
     finishedCount = Column(String, nullable=False, default=0)
     entrepreneurId = Column(String, ForeignKey('entrepreneurs.id'))
     entrepreneur = relationship('EntrepreneurModel', back_populates='courses')
@@ -172,8 +179,9 @@ class ClientModel(Base):
     photoPath = Column(String, nullable=True)
     city = Column(String, nullable=False)
     courses = relationship('CourseModel', secondary=client_course_association_table)
-    # interests
-    finished = Column(String, nullable=True)
+    categories = relationship('CategoryModel', secondary=client_category_association_table)
+    finishedCount = Column(String, nullable=True)
+    role = Column(String, nullable=False, default='CLIENT')
 
     def save_to_db(self, db: Session):
         db.add(self)
