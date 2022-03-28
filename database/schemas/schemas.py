@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class CategoryBaseSchema(BaseModel):
     id: str
+    groupc: str
     title: str
 
     class Config:
@@ -26,7 +27,6 @@ class FilialDependencySchema(BaseModel):
     id: str
     city: str
     address: str
-    entrepreneur: EntrepreneurDependencySchema
 
     class Config:
         orm_mode = True
@@ -39,7 +39,6 @@ class TutorDependencySchema(BaseModel):
     photoPath: Optional[str]
     experience: str
     description: str
-    entrepreneur: EntrepreneurDependencySchema
 
     class Config:
         orm_mode = True
@@ -54,7 +53,6 @@ class CourseDependencySchema(BaseModel):
     photoPath: Optional[str]
     isActive: bool
     finishedCount: str
-    entrepreneur: EntrepreneurDependencySchema
     categories: List[CategoryBaseSchema] = []
     filials: List[FilialDependencySchema] = []
 
@@ -96,22 +94,23 @@ class FeedbackSchema(FeedbackBaseSchema):
 class EntrepreneurBaseSchema(BaseModel):
     username: str
     title: str
-    categories: List[CategoryBaseSchema] = []
-    filials: List[FilialDependencySchema] = []
     role: str
 
 
 class EntrepreneurCreateSchema(EntrepreneurBaseSchema):
     password: str
+    categories: List[int] = []
 
 
 class EntrepreneurSchema(EntrepreneurBaseSchema):
     id: str
     videoPath: Optional[str] = None
     photoPath: Optional[str] = None
+    categories: List[CategoryBaseSchema] = []
     tutors: List[TutorDependencySchema] = []
     courses: List[CourseDependencySchema] = []
     feedbacks: List[FeedbackSchema] = []
+    filials: List[FilialDependencySchema] = []
 
     class Config:
         orm_mode = True
@@ -123,17 +122,17 @@ class TutorBaseSchema(BaseModel):
     photoPath: Optional[str]
     experience: str
     description: str
-    courses: Optional[List[CourseDependencySchema]] = []
 
 
 class TutorCreateSchema(TutorBaseSchema):
-    entrepreneurId: str
+    courses: List[str] = []
 
 
 class TutorSchema(TutorBaseSchema):
     id: str
     feedbacks: List[FeedbackSchema] = []
     entrepreneur: EntrepreneurDependencySchema
+    courses: List[CourseDependencySchema] = []
 
     class Config:
         orm_mode = True
@@ -145,13 +144,13 @@ class CourseBaseSchema(BaseModel):
     description: str
     videoPath: Optional[str]
     photoPath: Optional[str]
-    categories: List[CategoryBaseSchema] = []
-    tutors: List[TutorDependencySchema] = []
-    filials: List[FilialDependencySchema] = []
 
 
 class CourseCreateSchema(CourseBaseSchema):
-    entrepreneurId: str
+    categories: List[int]
+    tutors: List[str]
+    filials: List[str]
+    photoPath: Optional[List[str]] = []
 
 
 class CourseSchema(CourseBaseSchema):
@@ -160,6 +159,10 @@ class CourseSchema(CourseBaseSchema):
     isActive: bool
     finishedCount: str
     entrepreneur: EntrepreneurDependencySchema
+    categories: List[CategoryBaseSchema] = []
+    tutors: List[TutorDependencySchema] = []
+    clients: List[ClientDependencySchema] = []
+    filials: List[FilialDependencySchema] = []
 
     class Config:
         orm_mode = True
@@ -175,14 +178,30 @@ class ClientBaseSchema(BaseModel):
 
 class ClientCreateSchema(ClientBaseSchema):
     password: str
+    categories: List[int] = []
 
 
 class ClientSchema(ClientBaseSchema):
     id: str
     photoPath: str
-    courses: List[CourseDependencySchema]
-    categories: List[CategoryBaseSchema]
+    courses: List[CourseDependencySchema] = []
+    categories: List[CategoryBaseSchema] = []
+    finishedIds: str
+
+    class Config:
+        orm_mode = True
+
+
+class CourseFilialDependencySchema(BaseModel):
+    id: str
+    title: str
+    price: str
+    description: str
+    videoPath: Optional[str]
+    photoPath: Optional[str]
+    isActive: bool
     finishedCount: str
+    categories: List[CategoryBaseSchema] = []
 
     class Config:
         orm_mode = True
@@ -193,14 +212,10 @@ class FilialBaseSchema(BaseModel):
     address: str
 
 
-class FilialCreateSchema(FilialBaseSchema):
-    entrepreneurId: str
-
-
 class FilialSchema(FilialBaseSchema):
     id: str
     entrepreneur: EntrepreneurDependencySchema
-    courses: List[CourseDependencySchema]
+    courses: List[CourseFilialDependencySchema] = []
 
     class Config:
         orm_mode = True

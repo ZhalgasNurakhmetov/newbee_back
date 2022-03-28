@@ -1,24 +1,24 @@
-from sqlalchemy import Column, String, ForeignKey, Boolean, Table
+from sqlalchemy import Column, String, ForeignKey, Boolean, Table, Integer
 from database.database import Base
 
-entrepreneur_category_association_table = Table('entrepreneur-category', Base.metadata,
+entrepreneur_category_association_table = Table('entrepreneur_category', Base.metadata,
                                                 Column('entrepreneurId', ForeignKey('entrepreneurs.id'),
                                                        primary_key=True),
                                                 Column('categoryId', ForeignKey('categories.id'), primary_key=True)
                                                 )
 
-client_category_association_table = Table('client-category', Base.metadata,
+client_category_association_table = Table('client_category', Base.metadata,
                                           Column('clientId', ForeignKey('clients.id'),
                                                  primary_key=True),
                                           Column('categoryId', ForeignKey('categories.id'), primary_key=True)
                                           )
 
-course_category_association_table = Table('course-category', Base.metadata,
+course_category_association_table = Table('course_category', Base.metadata,
                                           Column('courseId', ForeignKey('courses.id'), primary_key=True),
                                           Column('categoryId', ForeignKey('categories.id'), primary_key=True)
                                           )
 
-tutor_course_association_table = Table('tutor-course', Base.metadata,
+tutor_course_association_table = Table('tutor_course', Base.metadata,
                                        Column('tutorId', ForeignKey('tutors.id'), primary_key=True),
                                        Column('courseId', ForeignKey('courses.id'), primary_key=True)
                                        )
@@ -47,7 +47,7 @@ class EntrepreneurModel(Base):
     photoPath = Column(String, nullable=True)
     categories = relationship('CategoryModel', secondary=entrepreneur_category_association_table)
     tutors = relationship('TutorModel', back_populates='entrepreneur')
-    courses = relationship('CoursesModel', back_populates='entrepreneur')
+    courses = relationship('CourseModel', back_populates='entrepreneur')
     filials = relationship('FilialModel', back_populates='entrepreneur')
     feedbacks = relationship('FeedbackModel')
     role = Column(String, nullable=False, default='ENTREPRENEUR')
@@ -61,14 +61,19 @@ class EntrepreneurModel(Base):
     def get_by_username(username: str, db: Session):
         return db.query(EntrepreneurModel).filter(EntrepreneurModel.username == username).first()
 
+    @staticmethod
+    def get_by_id(_id: str, db: Session):
+        return db.query(EntrepreneurModel).filter(EntrepreneurModel.id == _id).first()
+
 
 class CategoryModel(Base):
     from sqlalchemy.orm import Session
 
     __tablename__ = 'categories'
 
-    id = Column(String, primary_key=True, unique=True)
-    title = Column(String, nullable=False, unique=True)
+    id = Column(Integer, primary_key=True, unique=True, autoincrement=True)
+    groupc = Column(String, nullable=False)
+    title = Column(String, nullable=False)
 
     def save_to_db(self, db: Session):
         db.add(self)
@@ -76,8 +81,12 @@ class CategoryModel(Base):
         db.refresh(self)
 
     @staticmethod
-    def get_by_id(_id: str, db: Session):
+    def get_by_id(_id: int, db: Session):
         return db.query(CategoryModel).filter(CategoryModel.id == _id).first()
+
+    @staticmethod
+    def get_all(db: Session):
+        return db.query(CategoryModel).all()
 
 
 class TutorModel(Base):
@@ -100,6 +109,18 @@ class TutorModel(Base):
         db.add(self)
         db.commit()
         db.refresh(self)
+
+    @staticmethod
+    def get_by_id(_id: str, db: Session):
+        return db.query(TutorModel).filter(TutorModel.id == _id).first()
+
+    def delete_from_db(self, db: Session):
+        db.delete(self)
+        db.commit()
+
+    @staticmethod
+    def get_tutors_by_entrepreneur_id(_id: str, db: Session):
+        return db.query(TutorModel).where(TutorModel.entrepreneurId == _id).all()
 
 
 class FeedbackModel(Base):
@@ -139,6 +160,7 @@ class CourseModel(Base):
     entrepreneur = relationship('EntrepreneurModel', back_populates='courses')
     categories = relationship('CategoryModel', secondary=course_category_association_table)
     tutors = relationship('TutorModel', secondary=tutor_course_association_table, back_populates='courses')
+    clients = relationship('ClientModel', secondary=client_course_association_table, back_populates='courses')
     filials = relationship('FilialModel', secondary=course_filial_association_table, back_populates='courses')
     feedbacks = relationship('FeedbackModel')
 
@@ -146,6 +168,18 @@ class CourseModel(Base):
         db.add(self)
         db.commit()
         db.refresh(self)
+
+    @staticmethod
+    def get_by_id(_id: str, db: Session):
+        return db.query(CourseModel).filter(CourseModel.id == _id).first()
+
+    def delete_from_db(self, db: Session):
+        db.delete(self)
+        db.commit()
+
+    @staticmethod
+    def get_courses_by_entrepreneur_id(_id: str, db: Session):
+        return db.query(CourseModel).where(CourseModel.entrepreneurId == _id).all()
 
 
 class FilialModel(Base):
@@ -165,6 +199,18 @@ class FilialModel(Base):
         db.commit()
         db.refresh(self)
 
+    @staticmethod
+    def get_by_id(_id: str, db: Session):
+        return db.query(FilialModel).filter(FilialModel.id == _id).first()
+
+    def delete_from_db(self, db: Session):
+        db.delete(self)
+        db.commit()
+
+    @staticmethod
+    def get_filials_by_entrepreneur_id(_id: str, db: Session):
+        return db.query(FilialModel).where(FilialModel.entrepreneurId == _id).all()
+
 
 class ClientModel(Base):
     from sqlalchemy.orm import relationship, Session
@@ -178,12 +224,20 @@ class ClientModel(Base):
     birthDate = Column(String, nullable=False)
     photoPath = Column(String, nullable=True)
     city = Column(String, nullable=False)
-    courses = relationship('CourseModel', secondary=client_course_association_table)
+    courses = relationship('CourseModel', secondary=client_course_association_table, back_populates='clients')
     categories = relationship('CategoryModel', secondary=client_category_association_table)
-    finishedCount = Column(String, nullable=True)
+    finishedIds = Column(String, nullable=True)
     role = Column(String, nullable=False, default='CLIENT')
 
     def save_to_db(self, db: Session):
         db.add(self)
         db.commit()
         db.refresh(self)
+
+    @staticmethod
+    def get_by_username(username: str, db: Session):
+        return db.query(ClientModel).filter(ClientModel.username == username).first()
+
+    @staticmethod
+    def get_by_id(_id: str, db: Session):
+        return db.query(ClientModel).filter(ClientModel.id == _id).first()
