@@ -183,10 +183,10 @@ class ClientCreateSchema(ClientBaseSchema):
 
 class ClientSchema(ClientBaseSchema):
     id: str
-    photoPath: str
+    photoPath: str = None
     courses: List[CourseDependencySchema] = []
     categories: List[CategoryBaseSchema] = []
-    finishedIds: str
+    finishedIds: str = None
 
     class Config:
         orm_mode = True

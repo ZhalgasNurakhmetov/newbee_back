@@ -157,4 +157,3 @@ class EntrepreneurService:
         from database.models.models import CourseModel
 
         return CourseModel.get_courses_by_entrepreneur_id(current_entrepreneur.id, db)
-
