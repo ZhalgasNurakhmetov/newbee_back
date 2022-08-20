@@ -11,7 +11,8 @@ class EntrepreneurService:
     from fastapi import Depends
     from database.database import get_db
     from database.models.models import EntrepreneurModel
-    from services.entrepreneur.schemas.entrepreneur_schemas import CategoryAddSchema, EntrepreneurAddPhotoSchema
+    from services.entrepreneur.schemas.entrepreneur_schemas import EntrepreneurAddPhotoSchema
+    from services.schemas.service_schemas import CategoryAddSchema
     from services.auth.auth_service import get_current_user
     from typing import List
 
@@ -40,7 +41,7 @@ class EntrepreneurService:
         return current_entrepreneur
 
     @router.post('/api/entrepreneur/category/manage', response_model=EntrepreneurSchema)
-    def manage_category(self, categories: CategoryAddSchema, current_entrepreneur: EntrepreneurModel = Depends(get_current_user), db: Session = Depends(get_db)):
+    def manage_entrepreneur_category(self, categories: CategoryAddSchema, current_entrepreneur: EntrepreneurModel = Depends(get_current_user), db: Session = Depends(get_db)):
         from database.models.models import CategoryModel
 
         current_entrepreneur.categories = [CategoryModel.get_by_id(_id, db) for _id in categories.ids]
